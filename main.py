@@ -1,6 +1,4 @@
-import logging as log
-import os
-import sys
+from libs import *
 from piano import Piano
 from piano_key import PianoKey
 
