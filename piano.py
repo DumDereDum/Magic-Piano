@@ -1,6 +1,7 @@
 import sys
 import os
 import numpy as np
+from piano_key import PianoKey
 
 
 class Piano:
@@ -25,7 +26,7 @@ class Piano:
     def add_key(self, key):
         self.keys.append(key)
 
-    def draw(self):
+    def draw(self, img):
         for key in self.keys:
-            # рисуем клавишу
-            pass
+            key.draw_key(img)
+        return img
