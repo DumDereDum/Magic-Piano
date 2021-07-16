@@ -20,6 +20,8 @@ class Piano:
         if keys:
             self.keys = keys
 
+        print(str(self.left) + str(self.right))
+
     def add_key(self, key):
         self.keys[key.hash] = key
 
@@ -35,8 +37,8 @@ class Piano:
         px2, py2 = self.right
         width = int((px2 - px1)/7)
         height = py2 - py1
-        x = 0
-        y = 0
+        x = self.left[0]
+        y = self.left[1]
 
         for i in range(7):
             self.keys[(x+1)//width] = PianoKey(x, y, x+width, y+height, notes[i]+octave,  spath)
