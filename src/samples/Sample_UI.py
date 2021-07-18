@@ -3,6 +3,7 @@ import cv2 as cv
 import math
 import os
 import sys
+
 sys.path.append("..")
 
 from PySide2 import QtCore, QtGui, QtWidgets
@@ -75,7 +76,7 @@ class VideoPlayer(QtWidgets.QWidget):
         if not ret:
             return False
 
-        #img = cv.cvtColor(img, cv.COLOR_BGR2RGB)
+        # img = cv.cvtColor(img, cv.COLOR_BGR2RGB)
 
         img = cv.flip(img, turn)
         img = cv.resize(img, (int(m_width / 1.5), int(m_height / 1.5)),
@@ -111,7 +112,7 @@ class VideoPlayer(QtWidgets.QWidget):
                 piano.keys[key].unpress()
         # отрисовка
         img = piano.draw(img)
-
+        img = cv.cvtColor(img, cv.COLOR_BGR2RGB)
         image = qimage2ndarray.array2qimage(img)
 
         self.frame_label.setPixmap(QtGui.QPixmap.fromImage(image))
@@ -128,4 +129,3 @@ if __name__ == '__main__':
     player.show()
 
     sys.exit(app.exec_())
-
