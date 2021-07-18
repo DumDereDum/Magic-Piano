@@ -75,7 +75,7 @@ class VideoPlayer(QtWidgets.QWidget):
         if not ret:
             return False
 
-        img = cv.cvtColor(img, cv.COLOR_BGR2RGB)
+        #img = cv.cvtColor(img, cv.COLOR_BGR2RGB)
 
         img = cv.flip(img, turn)
         img = cv.resize(img, (int(m_width / 1.5), int(m_height / 1.5)),
