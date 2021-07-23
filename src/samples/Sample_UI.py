@@ -19,6 +19,8 @@ m_height = monitor[0].height
 
 spath = os.path.abspath('')[:-7] + '\\sounds'
 
+mpath = os.path.abspath('')[:-7] + 'music\\'
+
 is_Settings = False
 octave3 = False
 octave4 = False
@@ -29,6 +31,8 @@ or_camera_1 = False
 or_camera_2 = False
 
 db_mode = False
+time = 0
+miss = 0
 
 
 class Settings_Window(QtWidgets.QWidget):
@@ -139,7 +143,7 @@ class Settings_Window(QtWidgets.QWidget):
                 or_camera_1 = True
             else:
                 or_camera_2 = True
-            
+
             if self.debug_mode.isChecked():
                 db_mode = True
             else:
@@ -162,7 +166,10 @@ class VideoPlayer(QtWidgets.QWidget):
         self.camera_capture = cv.VideoCapture(0, cv.CAP_DSHOW)
         self.video_capture = cv.VideoCapture()
 
+        self.test = cv.VideoCapture(os.path.abspath('')[:-7] + 'music\\a-tisket-a-tasket-c4-c5-11.mp4')
+
         self.frame_timer = QtCore.QTimer()
+        self.music_timer = QtCore.QTimer()
         self.setup_camera(fps)
 
         self.fps = fps
@@ -171,18 +178,27 @@ class VideoPlayer(QtWidgets.QWidget):
         self.height, self.width = self.img.shape[:2]
         self.pgame = Game(self.height, self.width, spath)
 
+        self.mgame = Game(self.height, self.width, spath, 1, 4, 14, os.path.abspath('')[:-7] + 'music\\a-tisket-a-tasket-c4-c5-11.txt')
+        self.octave = None
+        self.key_num = None
+
         # в Qt label работает для вывода изображения
         self.frame_label = QtWidgets.QLabel()
+        self.music_label = QtWidgets.QLabel()
         self.quit_buttom = QtWidgets.QPushButton('Quit')
         self.play_pause_buttom = QtWidgets.QPushButton('Pause')
         self.camera_video_buttom = QtWidgets.QPushButton('Switch to video')
+        self.switch_to_music = QtWidgets.QPushButton('Switch to music')
 
         self.main_layout = QtWidgets.QGridLayout()
 
         self.setup_ui()
 
+        # передали адрес функции
+        self.quit_buttom.clicked.connect(self.close_win)
         self.play_pause_buttom.clicked.connect(self.play_pause)
         self.camera_video_buttom.clicked.connect(self.camera_video)
+        self.switch_to_music.clicked.connect(self.select_video_music)
 
     def setup_ui(self):
 
@@ -192,9 +208,6 @@ class VideoPlayer(QtWidgets.QWidget):
         self.setWindowTitle('Magic Piano')
         self.setFixedSize(self.sizeHint())
 
-        # передали адрес функции
-        self.quit_buttom.clicked.connect(self.close_win)
-
         self.setLayout(self.main_layout)
 
         QtWidgets.QToolTip.setFont(QtGui.QFont('Arial', 8))
@@ -203,10 +216,14 @@ class VideoPlayer(QtWidgets.QWidget):
         self.main_layout.addWidget(self.menu_bar(), 0, 0, 1, 2)
 
         # геолокация 1-2 клеточки 1-размер по высоте 2-по ширине
-        self.main_layout.addWidget(self.frame_label, 1, 0, 1, 2)
-        self.main_layout.addWidget(self.play_pause_buttom, 2, 0, 1, 1)
-        self.main_layout.addWidget(self.camera_video_buttom, 2, 1, 1, 1)
-        self.main_layout.addWidget(self.quit_buttom, 3, 0, 1, 2)
+        #
+        self.main_layout.addWidget(self.music_label, 1, 0, 1, 2)
+
+        self.main_layout.addWidget(self.switch_to_music, 2, 0, 1, 2)
+        self.main_layout.addWidget(self.frame_label, 3, 0, 1, 2)
+        self.main_layout.addWidget(self.play_pause_buttom, 4, 0, 1, 1)
+        self.main_layout.addWidget(self.camera_video_buttom, 4, 1, 1, 1)
+        self.main_layout.addWidget(self.quit_buttom, 5, 0, 1, 2)
 
     def menu_bar(self):
 
@@ -228,31 +245,55 @@ class VideoPlayer(QtWidgets.QWidget):
 
         edit.addAction(settings)
 
+        music = menu.addMenu("Music")
+
+        atat = QtWidgets.QAction('A Tisket, A Tasket', self)
+        atat.setShortcut('Ctrl+1')
+        atat.triggered.connect(self.atat)
+
+        fj = QtWidgets.QAction('Frere Jacques', self)
+        fj.setShortcut('Ctrl+2')
+        fj.triggered.connect(self.fj)
+
+        lb = QtWidgets.QAction('London Bridge', self)
+        lb.setShortcut('Ctrl+3')
+        lb.triggered.connect(self.lb)
+
+        music.addAction(atat)
+        music.addAction(fj)
+        music.addAction(lb)
+
         return menu
+
+    def atat(self):
+        global miss, time
+        miss, time = 0, 0
+        self.mgame = Game(self.height, self.width, spath, 1, 4, 11, mpath + 'a-tisket-a-tasket-c4-c5-11.txt')
+
+    def fj(self):
+        global miss, time
+        miss, time = 0, 0
+        self.mgame = Game(self.height, self.width, spath, 1, 3, 13, mpath + 'frere-jacques-c3-c4-13.txt')
+
+    def lb(self):
+        global miss, time
+        miss, time = 0, 0
+        self.mgame = Game(self.height, self.width, spath, 1, 3, 11, mpath + 'london-bridge-c3-c4-11.txt')
 
     def show_window_2(self):
         self.w2.setWindowModality(QtCore.Qt.ApplicationModal)
-
-        # в душе не знаю
-        self.pause = True
-        self.play_pause_buttom.setText('Play')
-        self.frame_timer.stop()
-
-        img = np.random.randint(255, size=(
-            int(monitor[0].height / 1.5), int(monitor[0].width / 1.5), 3), dtype=np.uint8)
-
-        image = qimage2ndarray.array2qimage(img)
-
-        self.frame_label.setPixmap(QtGui.QPixmap.fromImage(image))
-
         self.w2.show()
 
     def play_pause(self):
         if not self.pause:
             self.frame_timer.stop()
+            #
+            self.music_timer.stop()
             self.play_pause_buttom.setText('Play')
         else:
             self.frame_timer.start(int(1000 // self.fps))
+            #
+            self.music_timer.start(int(1000 // self.fps))
             self.play_pause_buttom.setText('Pause')
         self.pause = not self.pause
 
@@ -271,11 +312,47 @@ class VideoPlayer(QtWidgets.QWidget):
 
     def setup_camera(self, fps):
         self.frame_timer.timeout.connect(self.display_video_stream)
+        #
+        self.music_timer.timeout.connect(self.music_stream)
         # timer (msec)
+        #
+        self.music_timer.start(int(1000 // fps))
         self.frame_timer.start(int(1000 // fps))
 
-    def display_video_stream(self):
+    def select_video_music(self):
+        self.music_label.hide()
+        self.music_stream()
 
+    def music_stream(self):
+        global time
+        time += 1
+        ret, test = self.test.read()
+        ret, img = self.camera_capture.read()
+        global miss
+        img, m = self.mgame.render(img, time * self.music_timer.interval() / 1000, db_mode)
+        miss += m
+        cv.putText(test, 'Number of misses : {}'.format(str(miss)), (100, 150),
+                   cv.FONT_HERSHEY_PLAIN, 5, (0, 255, 0), 5)
+
+        img = cv.resize(img, (int(m_width / 1.5), int(m_height / 3)),
+                        interpolation=cv.INTER_AREA)
+
+        # cv.imshow('tets',test)
+
+        img = cv.cvtColor(img, cv.COLOR_BGR2RGB)
+        image = qimage2ndarray.array2qimage(img)
+
+        self.frame_label.setPixmap(QtGui.QPixmap.fromImage(image))
+        if test is None:
+            return
+        else:
+            test = cv.cvtColor(test, cv.COLOR_BGR2RGB)
+            test = cv.resize(test, (int(m_width / 1.5), int(m_height / 3)),
+                             interpolation=cv.INTER_AREA)
+            iTest = qimage2ndarray.array2qimage(test)
+            self.music_label.setPixmap(QtGui.QPixmap.fromImage(iTest))
+
+    def display_video_stream(self):
         if not self.video:
             ret, img = self.camera_capture.read()
             global is_Settings, octave3, octave4, octave5, key_num_7, key_num_14, or_camera_1, or_camera_2
@@ -310,7 +387,6 @@ class VideoPlayer(QtWidgets.QWidget):
                 self.pgame = Game(self.height, self.width, spath, turn, octave, key_num)
 
                 is_Settings = False
-
         else:
             ret, img = self.video_capture.read()
             if img is None:
@@ -323,7 +399,7 @@ class VideoPlayer(QtWidgets.QWidget):
             return False
 
         # if not self.video:
-        img = self.pgame.render(img, db_mode)
+        img, miss = self.pgame.render(img, db_mode)
 
         img = cv.resize(img, (int(m_width / 1.5), int(m_height / 1.5)),
                         interpolation=cv.INTER_AREA)
@@ -344,6 +420,8 @@ class VideoPlayer(QtWidgets.QWidget):
         if reply == QtWidgets.QMessageBox.Yes:
             cv.destroyAllWindows()
             self.camera_capture.release()
+            self.video_capture.release()
+            self.test.release()
             self.close()
         else:
             self.frame_timer.start()
